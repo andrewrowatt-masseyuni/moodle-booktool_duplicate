@@ -36,26 +36,22 @@ class hook_callbacks {
     ): void {
         global $PAGE;
 
-        if (empty($PAGE->cm) || $PAGE->cm->modname !== 'book') {
+        if (!$PAGE->cm || $PAGE->cm->modname !== 'book' || $PAGE->pagetype !== 'mod-book-view') {
             return;
         }
+
         if (!$PAGE->user_is_editing()) {
             return;
         }
-        $scriptpath = isset($PAGE->url) ? $PAGE->url->get_path() : '';
-        if (substr($scriptpath, -strlen('/mod/book/view.php')) !== '/mod/book/view.php') {
-            return;
-        }
+
         if (!has_capability('booktool/duplicate:duplicate', $PAGE->context)) {
             return;
         }
 
-        global $OUTPUT;
         $PAGE->requires->js_call_amd('booktool_duplicate/inject', 'init', [
             (int)$PAGE->cm->id,
             sesskey(),
             (string)get_string('duplicatechapter', 'booktool_duplicate'),
-            (string)$OUTPUT->image_url('t/copy')->out(false),
         ]);
     }
 }

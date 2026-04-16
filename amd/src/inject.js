@@ -20,106 +20,103 @@
  * @copyright  2026 Massey University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define([], function() {
 
-    /**
-     * Read a query parameter from an absolute or relative URL.
-     * @param {string} url
-     * @param {string} name
-     * @return {string|null}
-     */
-    function getParam(url, name) {
-        if (!url) {
-            return null;
-        }
-        var q = url.indexOf('?');
-        if (q === -1) {
-            return null;
-        }
-        var pairs = url.substring(q + 1).split('&');
-        for (var i = 0; i < pairs.length; i++) {
-            var kv = pairs[i].split('=');
-            if (decodeURIComponent(kv[0]) === name) {
-                return decodeURIComponent(kv[1] || '');
-            }
-        }
+/**
+ * Read a query parameter from an absolute or relative URL.
+ * @param {string} url
+ * @param {string} name
+ * @return {string|null}
+ */
+const getParam = (url, name) => {
+    if (!url) {
         return null;
     }
-
-    /**
-     * Find the chapter id for an action-list node by inspecting sibling action links.
-     * @param {Element} actionList
-     * @return {string|null}
-     */
-    function chapterIdFor(actionList) {
-        var links = actionList.querySelectorAll('a[href]');
-        for (var i = 0; i < links.length; i++) {
-            var href = links[i].getAttribute('href') || '';
-            if (href.indexOf('delete.php') !== -1 || href.indexOf('move.php') !== -1) {
-                var id = getParam(href, 'chapterid');
-                if (id) {
-                    return id;
-                }
-            }
-        }
+    const q = url.indexOf('?');
+    if (q === -1) {
         return null;
     }
-
-    /**
-     * Build the duplicate anchor.
-     * @param {string} href
-     * @param {string} label
-     * @param {string} iconUrl
-     * @return {HTMLAnchorElement}
-     */
-    function buildLink(href, label, iconUrl) {
-        var a = document.createElement('a');
-        a.setAttribute('href', href);
-        a.setAttribute('title', label);
-        a.className = 'booktool_duplicate-action';
-        var img = document.createElement('img');
-        img.setAttribute('src', iconUrl);
-        img.setAttribute('alt', label);
-        img.className = 'icon';
-        img.setAttribute('aria-hidden', 'false');
-        a.appendChild(img);
-        return a;
+    const pairs = url.substring(q + 1).split('&');
+    for (const pair of pairs) {
+        const kv = pair.split('=');
+        if (decodeURIComponent(kv[0]) === name) {
+            return decodeURIComponent(kv[1] || '');
+        }
     }
+    return null;
+};
 
-    return {
-        /**
-         * @param {number} cmid
-         * @param {string} sesskey
-         * @param {string} label
-         * @param {string} iconUrl
-         */
-        init: function(cmid, sesskey, label, iconUrl) {
-            var run = function() {
-                var lists = document.querySelectorAll('.book_toc .action-list');
-                if (!lists.length) {
-                    return;
-                }
-                for (var i = 0; i < lists.length; i++) {
-                    var list = lists[i];
-                    if (list.querySelector('.booktool_duplicate-action')) {
-                        continue;
-                    }
-                    var chapterid = chapterIdFor(list);
-                    if (!chapterid) {
-                        continue;
-                    }
-                    var href = M.cfg.wwwroot + '/mod/book/tool/duplicate/duplicate.php'
-                        + '?id=' + encodeURIComponent(cmid)
-                        + '&chapterid=' + encodeURIComponent(chapterid)
-                        + '&sesskey=' + encodeURIComponent(sesskey);
-                    list.appendChild(buildLink(href, label, iconUrl));
-                }
-            };
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', run);
+/**
+ * Find the chapter id for an action-list node by inspecting sibling action links.
+ * @param {Element} actionList
+ * @return {string|null}
+ */
+const chapterIdFor = (actionList) => {
+    const links = actionList.querySelectorAll('a[href]');
+    for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (href.indexOf('delete.php') !== -1 || href.indexOf('move.php') !== -1) {
+            const id = getParam(href, 'chapterid');
+            if (id) {
+                return id;
+            }
+        }
+    }
+    return null;
+};
+
+/**
+ * Build the duplicate anchor.
+ * @param {string} href
+ * @param {string} label
+ * @return {HTMLAnchorElement}
+ */
+const buildLink = (href, label) => {
+    const a = document.createElement('a');
+    a.setAttribute('href', href);
+    a.setAttribute('title', label);
+    a.className = 'booktool_duplicate-action';
+    const icon = document.createElement('i');
+    icon.className = 'icon fa fa-clone fa-fw';
+    icon.setAttribute('aria-hidden', 'true');
+    a.appendChild(icon);
+    return a;
+};
+
+/**
+ * @param {number} cmid
+ * @param {string} sesskey
+ * @param {string} label
+ */
+export const init = (cmid, sesskey, label) => {
+    const run = () => {
+        const lists = document.querySelectorAll('.book_toc .action-list');
+        if (!lists.length) {
+            return;
+        }
+        for (const list of lists) {
+            if (list.querySelector('.booktool_duplicate-action')) {
+                continue;
+            }
+            const chapterid = chapterIdFor(list);
+            if (!chapterid) {
+                continue;
+            }
+            const href = M.cfg.wwwroot + '/mod/book/tool/duplicate/duplicate.php'
+                + '?id=' + encodeURIComponent(cmid)
+                + '&chapterid=' + encodeURIComponent(chapterid)
+                + '&sesskey=' + encodeURIComponent(sesskey);
+            const link = buildLink(href, label);
+            const deleteLink = list.querySelector('a[href*="delete.php"]');
+            if (deleteLink) {
+                list.insertBefore(link, deleteLink);
             } else {
-                run();
+                list.appendChild(link);
             }
         }
     };
-});
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+    } else {
+        run();
+    }
+};

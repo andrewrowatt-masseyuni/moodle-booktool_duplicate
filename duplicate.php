@@ -82,6 +82,9 @@ foreach ($tocopy as $index => $src) {
     $new->timecreated   = time();
     $new->timemodified  = time();
     $new->importsrc     = '';
+    if ($src->id === $source->id) {
+        $new->title = get_string('chaptercopytitle', 'booktool_duplicate', $src->title);
+    }
 
     $newid = $DB->insert_record('book_chapters', $new);
     $newids[$src->id] = $newid;
