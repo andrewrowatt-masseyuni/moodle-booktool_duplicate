@@ -110,7 +110,7 @@
         {
             "label": "Run behat tests",
             "type": "shell",
-            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@tiny_duplicate --format progress --format moodle_screenshot",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@booktool_duplicate --format progress --format moodle_screenshot",
             "group": "test"
         },
         {
