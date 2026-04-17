@@ -65,8 +65,8 @@ class behat_booktool_duplicate extends behat_base {
             'filename'  => $filename,
         ], $sourcepath);
 
-        $content = '<p>' . htmlspecialchars($chapter->content, ENT_QUOTES, 'UTF-8') . '</p>'
-            . '<p><img src="@@PLUGINFILE@@/' . $filename . '" alt="Embedded image"></p>';
+        $content = $chapter->content
+            . '<p><img src="@@PLUGINFILE@@/' . s($filename) . '" alt="Embedded image"></p>';
         $DB->set_field('book_chapters', 'content', $content, ['id' => $chapter->id]);
         $DB->set_field('book_chapters', 'contentformat', FORMAT_HTML, ['id' => $chapter->id]);
         $DB->set_field('book', 'revision', $book->revision + 1, ['id' => $book->id]);

@@ -22,27 +22,16 @@
  */
 
 /**
- * Read a query parameter from an absolute or relative URL.
- * @param {string} url
- * @param {string} name
- * @return {string|null}
+ * Parse an href into a URL, resolving relative hrefs against the current page.
+ * @param {string} href
+ * @return {URL|null}
  */
-const getParam = (url, name) => {
-    if (!url) {
+const parseUrl = (href) => {
+    try {
+        return new URL(href, window.location.href);
+    } catch (e) {
         return null;
     }
-    const q = url.indexOf('?');
-    if (q === -1) {
-        return null;
-    }
-    const pairs = url.substring(q + 1).split('&');
-    for (const pair of pairs) {
-        const kv = pair.split('=');
-        if (decodeURIComponent(kv[0]) === name) {
-            return decodeURIComponent(kv[1] || '');
-        }
-    }
-    return null;
 };
 
 /**
@@ -53,9 +42,12 @@ const getParam = (url, name) => {
 const chapterIdFor = (actionList) => {
     const links = actionList.querySelectorAll('a[href]');
     for (const link of links) {
-        const href = link.getAttribute('href') || '';
-        if (href.indexOf('delete.php') !== -1 || href.indexOf('move.php') !== -1) {
-            const id = getParam(href, 'chapterid');
+        const u = parseUrl(link.getAttribute('href') || '');
+        if (!u) {
+            continue;
+        }
+        if (u.pathname.endsWith('/delete.php') || u.pathname.endsWith('/move.php')) {
+            const id = u.searchParams.get('chapterid');
             if (id) {
                 return id;
             }
@@ -101,11 +93,11 @@ export const init = (cmid, sesskey, label) => {
             if (!chapterid) {
                 continue;
             }
-            const href = M.cfg.wwwroot + '/mod/book/tool/duplicate/duplicate.php'
-                + '?id=' + encodeURIComponent(cmid)
-                + '&chapterid=' + encodeURIComponent(chapterid)
-                + '&sesskey=' + encodeURIComponent(sesskey);
-            const link = buildLink(href, label);
+            const url = new URL(M.cfg.wwwroot + '/mod/book/tool/duplicate/duplicate.php');
+            url.searchParams.set('id', cmid);
+            url.searchParams.set('chapterid', chapterid);
+            url.searchParams.set('sesskey', sesskey);
+            const link = buildLink(url.toString(), label);
             const deleteLink = list.querySelector('a[href*="delete.php"]');
             if (deleteLink) {
                 list.insertBefore(link, deleteLink);

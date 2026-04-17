@@ -65,35 +65,39 @@ class duplicator {
                 ['bookid' => $book->id, 'pagenum' => $source->pagenum],
                 'pagenum'
             );
-            foreach ($rs as $ch) {
-                if (!$ch->subchapter) {
-                    break;
+            try {
+                foreach ($rs as $ch) {
+                    if (!$ch->subchapter) {
+                        break;
+                    }
+                    $tocopy[] = $ch;
                 }
-                $tocopy[] = $ch;
+            } finally {
+                $rs->close();
             }
-            $rs->close();
         }
 
-        $n = count($tocopy);
-        $lastpagenum = $source->pagenum + $n - 1;
+        $chaptercount = count($tocopy);
+        $lastpagenum = $source->pagenum + $chaptercount - 1;
 
         $fs = get_file_storage();
         $newids = [];
+        $now = time();
 
         $transaction = $DB->start_delegated_transaction();
 
         // Shift the pagenums of every chapter after the block we are duplicating.
         $DB->execute(
             "UPDATE {book_chapters} SET pagenum = pagenum + :n WHERE bookid = :bookid AND pagenum > :last",
-            ['n' => $n, 'bookid' => $book->id, 'last' => $lastpagenum]
+            ['n' => $chaptercount, 'bookid' => $book->id, 'last' => $lastpagenum]
         );
 
         foreach ($tocopy as $src) {
             $new = clone $src;
             unset($new->id);
-            $new->pagenum      = $src->pagenum + $n;
-            $new->timecreated  = time();
-            $new->timemodified = time();
+            $new->pagenum      = $src->pagenum + $chaptercount;
+            $new->timecreated  = $now;
+            $new->timemodified = $now;
             $new->importsrc    = '';
             if ((int)$src->id === (int)$source->id) {
                 $new->title = get_string('chaptercopytitle', 'booktool_duplicate', $src->title);
@@ -120,9 +124,9 @@ class duplicator {
         $transaction->allow_commit();
 
         // Trigger chapter_created events once the transaction is committed.
+        $newchapters = $DB->get_records_list('book_chapters', 'id', array_values($newids));
         foreach ($newids as $newid) {
-            $newchapter = $DB->get_record('book_chapters', ['id' => $newid], '*', MUST_EXIST);
-            \mod_book\event\chapter_created::create_from_chapter($book, $context, $newchapter)->trigger();
+            \mod_book\event\chapter_created::create_from_chapter($book, $context, $newchapters[$newid])->trigger();
         }
 
         // Normalise book structure (pagenum, subchapter flags on first row, etc.).
