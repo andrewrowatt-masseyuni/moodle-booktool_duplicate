@@ -24,8 +24,6 @@
 
 namespace booktool_duplicate\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy provider implementation for booktool_duplicate.
  *
