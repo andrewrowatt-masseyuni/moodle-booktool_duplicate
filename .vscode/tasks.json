@@ -15,9 +15,36 @@
     },
     "tasks": [
         {
+            "label": "PHP Lint",
+            "type": "shell",
+            "command": "../moodle-plugin-ci/bin/moodle-plugin-ci phplint ./mod/book/tool/duplicate",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405"
+            }
+        },
+        {
+            "label": "PHP Mess Detector",
+            "type": "shell",
+            "command": "../moodle-plugin-ci/bin/moodle-plugin-ci phpmd ./mod/book/tool/duplicate",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405"
+            }
+        },
+        {
+            "label": "moodle-plugin-ci mustache",
+            "type": "shell",
+            "command": "../moodle-plugin-ci/bin/moodle-plugin-ci mustache ./mod/book/tool/duplicate",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405"
+            }
+        },
+        {
             "label": "grunt moodle-ci - amd",
             "type": "shell",
-            "command": "grunt --max-lint-warnings=0 amd",
+            "command": "grunt --max-lint-warnings=0 amd && /home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/cli/purge_caches.php",
             "group": "test",
             "options": {
                 "cwd": "/home/arowatt/moodle405/mod/book/tool/duplicate"
@@ -69,37 +96,42 @@
             "group": "test"
         },
         {
-            "label": "phpunit",
+            "label": "Run phpunit",
             "type": "shell",
             "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit mod/book/tool/duplicate/tests/. --test-suffix=_test.php",
             "group": "test"
         },
         {
-            "label": "phpunit - privacy",
+            "label": "Run phpunit - privacy",
             "type": "shell",
             "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit privacy/tests/privacy/provider_test.php",
             "group": "test"
         },
         {
-            "label": "behat",
+            "label": "Run behat tests",
             "type": "shell",
-            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@booktool_duplicate --format progress --format moodle_screenshot",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@tiny_duplicate --format progress --format moodle_screenshot",
             "group": "test"
         },
         {
             "label": "Run all tests (booktool_duplicate)",
             "dependsOrder": "sequence",
             "dependsOn": [
+                "PHP Lint",
+                "PHP Mess Detector",
                 "PHP Code check and auto-fix - phpcbf",
+                "PHP Code checker - phpcs",
                 "PHPDoc checker",
                 "grunt moodle-ci - amd",
                 "grunt moodle-ci - yui",
                 "grunt moodle-ci - gherkinlint",
                 "grunt moodle-ci - stylelint",
-                "phpunit",
-                "behat",
-                "phpunit - privacy"
-            ]
+                "moodle-plugin-ci mustache",
+                "Run phpunit",
+                "Run behat tests",
+                "Run phpunit - privacy"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "phpunit-init",
@@ -123,12 +155,33 @@
             "problemMatcher": []
         },
         {
-            "label": "xxxPurge cache",
+            "label": "Uninstall plugin",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/cli/uninstall_plugins.php --plugins=tiny_duplicate --run",
+            "group": "build"
+        },
+        {
+            "label": "Install plugin (via Moodle upgrade)",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/cli/upgrade.php --non-interactive --verbose-settings",
+            "group": "build"
+        },
+        {
+            "label": "Purge cache",
             "type": "shell",
             "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/cli/purge_caches.php",
+            "group": "build"
+        },
+        {
+            "label": "grunt & Purge cache",
+            "type": "shell",
+            "command": "grunt amd && /home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/cli/purge_caches.php",
             "group": "none",
             "presentation": {
                 "panel": "dedicated",
+            },
+            "options": {
+                "cwd": "/home/arowatt/moodle405/mod/book/tool/duplicate"
             },
             "problemMatcher": []
         }
