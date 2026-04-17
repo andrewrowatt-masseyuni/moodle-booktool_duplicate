@@ -1,0 +1,136 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+    },
+    "options": {
+        "env": {
+            "COMPOSE_PROJECT_NAME": "moodle405",
+            "MOODLE_DOCKER_WWWROOT": "/home/arowatt/moodle405",
+            "MOODLE_DOCKER_DB": "pgsql"
+        }
+    },
+    "tasks": [
+        {
+            "label": "grunt moodle-ci - amd",
+            "type": "shell",
+            "command": "grunt --max-lint-warnings=0 amd",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405/mod/book/tool/duplicate"
+            }
+        },
+        {
+            "label": "grunt moodle-ci - yui",
+            "type": "shell",
+            "command": "grunt --max-lint-warnings=0 yui",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405/mod/book/tool/duplicate"
+            }
+        },
+        {
+            "label": "grunt moodle-ci - gherkinlint",
+            "type": "shell",
+            "command": "grunt --max-lint-warnings=0 gherkinlint",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405/mod/book/tool/duplicate"
+            }
+        },
+        {
+            "label": "grunt moodle-ci - stylelint",
+            "type": "shell",
+            "command": "grunt --max-lint-warnings=0 stylelint",
+            "group": "test",
+            "options": {
+                "cwd": "/home/arowatt/moodle405/mod/book/tool/duplicate"
+            }
+        },
+        {
+            "label": "PHP Code check and auto-fix - phpcbf",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php local/codechecker/vendor/bin/phpcbf ./mod/book/tool/duplicate/",
+            "group": "test"
+        },
+        {
+            "label": "PHP Code checker - phpcs",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php local/codechecker/vendor/bin/phpcs ./mod/book/tool/duplicate/",
+            "group": "test"
+        },
+        {
+            "label": "PHPDoc checker",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php local/moodlecheck/cli/moodlecheck.php -p=mod/book/tool/duplicate -f=text | tee /dev/stderr | grep -vz error",
+            "group": "test"
+        },
+        {
+            "label": "phpunit",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit mod/book/tool/duplicate/tests/. --test-suffix=_test.php",
+            "group": "test"
+        },
+        {
+            "label": "phpunit - privacy",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver vendor/bin/phpunit privacy/tests/privacy/provider_test.php",
+            "group": "test"
+        },
+        {
+            "label": "behat",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec -u www-data webserver php admin/tool/behat/cli/run.php --tags=@booktool_duplicate --format progress --format moodle_screenshot",
+            "group": "test"
+        },
+        {
+            "label": "Run all tests (booktool_duplicate)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "PHP Code check and auto-fix - phpcbf",
+                "PHPDoc checker",
+                "grunt moodle-ci - amd",
+                "grunt moodle-ci - yui",
+                "grunt moodle-ci - gherkinlint",
+                "grunt moodle-ci - stylelint",
+                "phpunit",
+                "behat",
+                "phpunit - privacy"
+            ]
+        },
+        {
+            "label": "phpunit-init",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/tool/phpunit/cli/init.php",
+            "group": "build"
+        },
+        {
+            "label": "behat-init",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/tool/behat/cli/init.php",
+            "group": "build"
+        },
+        {
+            "label": "Init all tests",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "phpunit-init",
+                "behat-init"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "xxxPurge cache",
+            "type": "shell",
+            "command": "/home/arowatt/moodle-docker/bin/moodle-docker-compose exec webserver php admin/cli/purge_caches.php",
+            "group": "none",
+            "presentation": {
+                "panel": "dedicated",
+            },
+            "problemMatcher": []
+        }
+    ]
+}
