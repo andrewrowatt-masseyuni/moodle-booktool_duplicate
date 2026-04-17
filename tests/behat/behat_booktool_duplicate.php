@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable moodle.Files.LineLength.TooLong
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,13 +24,14 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
+
 require_once(__DIR__ . '/../../../../../../lib/behat/behat_base.php');
 
 /**
  * Behat steps for booktool_duplicate.
  */
 class behat_booktool_duplicate extends behat_base {
-
     /**
      * Attach a file to a book chapter's file area and rewrite its content to reference it.
      *
