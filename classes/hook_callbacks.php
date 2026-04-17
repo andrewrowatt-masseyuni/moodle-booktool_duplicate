@@ -24,8 +24,12 @@
 
 namespace booktool_duplicate;
 
+/**
+ * Class hook_callbacks.
+ *
+ * @package booktool_duplicate
+ */
 class hook_callbacks {
-
     /**
      * Inject the duplicate-chapter AMD module on book view pages when editing is on.
      *

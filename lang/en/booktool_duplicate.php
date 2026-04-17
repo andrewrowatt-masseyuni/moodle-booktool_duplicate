@@ -24,10 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$string['pluginname'] = 'Book duplicate chapter';
-$string['duplicate:duplicate'] = 'Duplicate book chapters';
-$string['duplicatechapter'] = 'Duplicate chapter';
 $string['chaptercopytitle'] = 'Copy of {$a}';
 $string['chapterduplicated'] = 'Chapter "{$a->title}" duplicated.';
 $string['chapterduplicatedwithsubs'] = 'Chapter "{$a->title}" duplicated with {$a->subchapters} subchapter(s).';
+$string['duplicate:duplicate'] = 'Duplicate book chapters';
+$string['duplicatechapter'] = 'Duplicate chapter';
+$string['pluginname'] = 'Book duplicate chapter';
 $string['privacy:metadata'] = 'The Book duplicate chapter plugin does not store any personal data.';
